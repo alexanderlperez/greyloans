@@ -1,21 +1,8 @@
-import React, { Component, Fragment } from 'react';
-import { Button, Form, FormGroup, Label, Input, FormText  } from 'reactstrap';
-import PlacesAutocomplete, { geocodeByAddress, getLatLng } from 'react-places-autocomplete';
-
-function Unit({ monthlyRent, unitNumber, vacancy, bedrooms, bathrooms, annualTotal }) {
-    return (
-        <Fragment>
-            <br />
-            <Label> Montly Rent <Input type="text" value={monthlyRent} /> </Label>
-            <Label> Unit # <Input type="text" value={unitNumber} /> </Label>
-            <Label> Vacancy <Input type="text" value={vacancy} /> </Label>
-            <Label> Bedrooms <Input type="text" value={bedrooms} /> </Label>
-            <Label> Bathrooms <Input type="text" value={bathrooms} /> </Label>
-            <Label> Annual Total <Input type="text" value={annualTotal} /> </Label>
-        </Fragment>
-    );
-}
-
+import React, { Component } from 'react';
+import { Button, Form, FormGroup, Label, Input } from 'reactstrap';
+import { geocodeByAddress } from 'react-places-autocomplete';
+import AutoCompleteInput from '../Components/AutoCompleteInput.js';
+import Unit from '../Components/RentalUnitEntry.js';
 
 class LoanForm extends Component {
     constructor(props) {
@@ -44,6 +31,7 @@ class LoanForm extends Component {
 
     addRepeater() {
         const units = this.state.units.slice()
+
         units.push({ 
             monthlyRent: '', 
             unitNumber: '', 
@@ -53,37 +41,34 @@ class LoanForm extends Component {
             annualTotal: ''
         })
 
-        this.setState({
-            units
-        })
+        this.setState({units})
     }
 
-    handleChange (address) {
-        this.setState({ address  });
+    // for place autocomplete
+    handleAddressChange(address) {
+        this.setState({address});
     }
 
-    handleSelect (address) {
+    // for place autocomplete
+    handleSelect(address) {
+        function addressObjFromComponents(components) {
+            // find long_name in components array by matching within "types" subarray
+            const nameByType = (parts, targetType) => 
+                parts.find(part => part.types.find(type => type === targetType)).long_name;
+
+            return {
+                street: nameByType(components, 'street_number') + ' ' + nameByType(components, 'route'),
+                city: nameByType(components, 'sublocality_level_1'),
+                state: nameByType(components, 'administrative_area_level_1'),
+                county: nameByType(components, 'administrative_area_level_2'),
+                zip: nameByType(components, 'postal_code'),
+            };
+        }
+
         geocodeByAddress(address)
-            .then(results => {
-                console.log(results);
-
-                function getAddressParts(parts, target) {
-                    // search through array to get target from "types" subarray
-                    return parts.find(part => part.types.find(type => type === target)).long_name;
-                }
-
-                const addressParts = {
-                    street: getAddressParts(results[0].address_components, 'street_number') + ' ' + getAddressParts(results[0].address_components, 'route'),
-                    city: getAddressParts(results[0].address_components, 'sublocality_level_1'),
-                    state: getAddressParts(results[0].address_components, 'administrative_area_level_1'),
-                    county: getAddressParts(results[0].address_components, 'administrative_area_level_2'),
-                    zip: getAddressParts(results[0].address_components, 'postal_code'),
-                };
-
-                console.log(addressParts);
-
-                this.setState({addressParts})
-            })
+            .then(results => this.setState({
+                addressParts: addressObjFromComponents(results[0].address_components)
+            }))
             .catch(error => console.error('Error', error));
     }
 
@@ -94,44 +79,10 @@ class LoanForm extends Component {
                 <Form>
                     <FormGroup>
                         <Label for="address">Property Address</Label>
-                        <PlacesAutocomplete
-                            value={this.state.address}
-                            onChange={this.handleChange}
-                            onSelect={this.handleSelect}>
-
-                            {({ getInputProps, suggestions, getSuggestionItemProps, loading  }) => (
-                                <div>
-                                    <input
-                                        {...getInputProps({
-                                            placeholder: 'Search Places ...',
-                                            className: 'location-search-input',
-                                        })}
-                                    />
-
-                                    <div className="autocomplete-dropdown-container">
-                                        {loading && <div>Loading...</div>}
-                                        {suggestions.map(suggestion => {
-                                            const className = suggestion.active
-                                                ? 'suggestion-item--active'
-                                                : 'suggestion-item';
-                                            const style = suggestion.active
-                                                ? { backgroundColor: '#fafafa', cursor: 'pointer'  }
-                                                : { backgroundColor: '#ffffff', cursor: 'pointer'  };
-                                            return (
-                                                <div
-                                                    {...getSuggestionItemProps(suggestion, {
-                                                        className,
-                                                        style,
-                                                    })}
-                                                >
-                                                    <span>{suggestion.description}</span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-                        </PlacesAutocomplete>
+                        <AutoCompleteInput 
+                            address={this.state.address} 
+                            handleChange={this.handleChange} 
+                            handleSelect={this.handleSelect} />
                     </FormGroup>
 
                     <div className="ExpenseItems">
@@ -148,9 +99,9 @@ class LoanForm extends Component {
 
                     <div className="Repeater">
                         <h2>Rent Roll</h2>
-                        {this.state.units.map((unit, i) => (
-                            <Unit {...unit} key="i"/>
-                        ))}
+                        {this.state.units.map((unit, i) => 
+                            <Unit {...unit} key={i}/>
+                        )}
                         <Button onClick={this.addRepeater} color="primary">Add Unit</Button>
                     </div>
 
