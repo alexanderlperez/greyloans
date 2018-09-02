@@ -1,5 +1,6 @@
 import React, { Component, Fragment } from 'react';
 import { Button } from 'reactstrap';
+import './style.css';
 
 class Repeater extends Component {
     render() {
@@ -8,10 +9,10 @@ class Repeater extends Component {
                 <Button onClick={this.props.entryAdded} color="primary">Add Entry</Button>
 
                 {this.props.collection.map((props, i) => 
-                    <Fragment key={i}>
+                    <div className="entry" key={i}>
+                        <Button className="remove" onClick={({entryId}) => this.props.removeEntry(entryId)} key={Date.now()} color="secondary">✖</Button>
                         {this.props.entry(props, i)}
-                        <Button onClick={({entryId}) => this.props.removeEntry(entryId)} key={Date.now()} color="secondary">-</Button>
-                    </Fragment>
+                    </div>
                 )}
             </div>
         );

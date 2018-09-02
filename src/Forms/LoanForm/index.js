@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { Button, Form, FormGroup, Label, Input } from 'reactstrap';
 
-import AutoCompleteInput from 'Components/AutoCompleteInput';
 import CalculatedExpenses from 'Components/CalculatedExpenses';
 import Repeater from 'Components/Repeater';
 import Unit from 'Components/RentalUnitEntry';
+import MapPropertyAddress from 'Components/MapPropertyAddress';
 
 const CALC_API = "https://script.google.com/macros/s/AKfycbwPGz6uQQS9IW33ASPYlcWaEtRMD8eDAK1ONg7lT2dREXpaSUYh/exec";
 
@@ -21,15 +21,16 @@ class LoanForm extends Component {
                 zip: ''
             },
             address: '',
+            coords: {lat: 40.6, lng: -74},
+            units: [],
             income: 0,
             expenses: 0,
             rate: 0,  
             noi: 0,  
-            units: [],
         };
 
         this.handleFieldChange = this.handleFieldChange.bind(this);
-        this.handleExpensesChange = this.handleExpensesChange.bind(this);
+        this.handleExpensesChange = this.handleExpensesChange.bind(this); // called in various methods
         this.processForm = this.processForm.bind(this)
 
         // address
@@ -98,6 +99,13 @@ class LoanForm extends Component {
             units,
             income,
         }, () => {
+            this.props.updateData({
+                address: this.state.address,
+                income: this.state.income,
+                expenses: this.state.expenses,
+                rate: this.state.rate,
+                noi: this.state.noi
+            })
             this.handleExpensesChange(this.state.expenses)
         })
     }
@@ -113,17 +121,24 @@ class LoanForm extends Component {
         this.setState({
             expenses,
             noi
-        });
+        }, () => this.props.updateData({
+            address: this.state.address,
+            income: this.state.income,
+            expenses: this.state.expenses,
+            rate: this.state.rate,
+            noi: this.state.noi
+        }));
     }
 
     handleAddressChange(address) {
         this.setState({address});
     }
 
-    handleSelect(address, addressParts) {
+    handleSelect(address, addressParts, coords) {
         this.setState({
             address,
-            addressParts
+            addressParts,
+            coords
         })
     }
 
@@ -136,69 +151,67 @@ class LoanForm extends Component {
             noi
         } = this.state;
 
-        const formData = {
-            address,
-            income,
-            expenses,
-            rate,
-            noi
-        }
+        const data = { address, income, expenses, rate, noi };
 
-        fetch(CALC_API, { method: 'POST', body: formData})
+        this.props.updateData(data)
+
+        fetch(CALC_API, { method: 'POST', body: data})
             .then(res => res.json())
             .then(matches => {
-                // results
+                this.props.updateMatches(matches.terms)
             })
             .catch(err => console.error(err))
     }
 
     render() {
         return (
-            <div className="LoanForm">
+            <Form className="LoanForm">
                 <h1>Loan Form</h1>
 
-                <Form>
-                    <FormGroup>
-                        <Label for="address">Property Address</Label>
-                        <AutoCompleteInput 
-                            address={this.state.address} 
-                            handleChange={this.handleAddressChange} 
-                            handleSelect={this.handleSelect} />
-                    </FormGroup>
+                <section className="property-address">
+                    <MapPropertyAddress 
+                        address={this.state.address}
+                        coords={this.state.coords} 
+                        handleChange={this.handleAddressChange} 
+                        handleSelect={this.handleSelect} />
+                </section>
 
-                    <div className="RentRoll">
-                        <h3>Rent Roll</h3>
-                        <Repeater 
-                            entryAdded={this.addUnit}
-                            removeEntry={this.removeUnit}
-                            collection={this.state.units} 
-                            entry={(props, i) => 
+                <section className="rent-roll">
+                    <h3>Rent Roll</h3>
+                    <Repeater 
+                        entryAdded={this.addUnit}
+                        removeEntry={this.removeUnit}
+                        collection={this.state.units} 
+                        entry={(props, i) => 
                                 <Unit {...props} key={i} onFieldChange={this.handleUnitFieldChange} />
-                            }/>
-                    </div>
+                        }/>
+                </section>
 
-                    <div className="ExpenseItems">
-                        <h3>Expense Items</h3>
-                        <CalculatedExpenses 
-                            onExpensesChange={this.handleExpensesChange} />
-                    </div>
+                <section className="expenses">
+                    <h3>Expense Items</h3>
+                    <p><i>All values in $</i></p>
+                    <CalculatedExpenses onExpensesChange={this.handleExpensesChange} />
+                </section>
 
-                    <FormGroup>
-                        <span>Net Operating Income: ${this.state.noi}</span> 
-                    </FormGroup>
+                <section className="capitalization">
+                    <Label>
+                        Capitalization Rate (%)
+                        <Input 
+                            type="text" 
+                            name="rate"
+                            value={this.state.rate}
+                            onChange={this.handleFieldChange} />
+                    </Label>
+                </section>
 
-                    <FormGroup>
-                        <Label>
-                            Capitalization Rate 
-                            <Input type="text" 
-                                onChange={this.handleFieldChange} 
-                                value={this.state.rate} />
-                        </Label>
-                    </FormGroup>
+                <section className="noi">
+                    <b>Net Operating Income: ${this.state.noi}</b> 
+                </section>
 
-                    <Button onClick={this.processForm}>Get matches</Button>
-                </Form>
-            </div>
+                <section className="controls">
+                    <Button onClick={this.processForm}>Click for top matches</Button>
+                </section>
+            </Form>
         );
     }
 }

@@ -1,0 +1,25 @@
+.location-search-input {
+    max-width: 25em;
+}
+
+.autocomplete-wrapper {
+    position: relative;
+}
+
+.autocomplete-dropdown-container {
+    position: absolute;
+    z-index: 1;
+    background: white;
+}
+
+.suggestion-item { 
+    background-color: #fff; 
+    cursor: pointer;  
+    padding: .25em;
+}
+
+    .suggestion-item--active { 
+        background-color: #eee; 
+        cursor: pointer;
+        padding: .25em;
+    }
