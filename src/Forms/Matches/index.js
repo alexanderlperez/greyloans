@@ -72,7 +72,7 @@ class Matches extends Component {
                     </tbody>
                 </Table>
 
-                <Button onClick={this.nextPage}>Show More</Button>
+                <Button onClick={this.nextPage} color="primary">Show More</Button>
             </div>
         );
     }

@@ -209,7 +209,7 @@ class LoanForm extends Component {
                 </section>
 
                 <section className="controls">
-                    <Button onClick={this.processForm}>Click for top matches</Button>
+                    <Button onClick={this.processForm} color="success">Click for top matches</Button>
                 </section>
             </Form>
         );
