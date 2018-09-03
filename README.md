@@ -8,6 +8,11 @@ Functional, basic-UX form for loan-underwriting api results
 - auto-updated data points
 
 ```
+#clone the repo
+git clone https://github.com/alexanderlperez/greyloans
+
+cd greyloans
+
 # get this running
 npm i
 npm start

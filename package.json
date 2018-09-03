@@ -1,8 +1,8 @@
 {
-    "name": "noom-editorials",
+    "name": "greyloans",
     "version": "0.1.0",
     "private": true,
-    "homepage": "http://alexanderlperez.github.io/editorials",
+    "homepage": "http://alexanderlperez.github.io/greyloans",
     "dependencies": {
         "async": "^2.6.1",
         "bootstrap": "^4.1.3",
